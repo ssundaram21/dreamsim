@@ -32,16 +32,12 @@ The package is used for importing and using the DreamSim model.
 
 **Option 2:** Clone our repo and install dependencies.
 This is necessary for running our training/evaluation scripts.
-<!--  ```
-git clone https://github.com/ssundaram21/DreamSim.git
-conda env create -f environment.yml
-export PYTHONPATH="$PYTHONPATH:$(realpath ./DreamSim)"
-``` -->
+
 ```
 python3 -m venv ds
 source ds/bin/activate
 pip install -r requirements.txt
-export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsimv)"
+export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsim)"
 ```
 To install with conda:
 ```
@@ -58,7 +54,7 @@ export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsim)"
 ### Quickstart: Perceptual similarity metric
 The basic use case is to measure the perceptual distance between two images. **A higher score means more different, lower means more similar**. 
 
-The following code snippet is all you need. The first time that you run `dreamsim` it will automatically download the model weights. The default model settings are specified in `dreamsim/dreamsim_inference_v0.yaml`.
+The following code snippet is all you need. The first time that you run `dreamsim` it will automatically download the model weights. The default model settings are specified in `./dreamsim/config.py`.
 ```
 from dreamsim import dreamsim
 from PIL import Image
@@ -124,7 +120,7 @@ Run `./dataset/download_dataset.sh` to download and unzip the NIGHTS dataset int
 ## Experiments
 
 ### Download resources
-Run `./training/download_models.sh` to download and unzip necessary ViT checkpoints (for DINO, CLIP, OpenCLIP, and MAE) into `./models`. 
+Run `./training/download_models.sh` to download and unzip necessary ViT checkpoints (for CLIP, OpenCLIP, and MAE) into `./models`. 
 
 ### Training
 To finetune a perceptual model on the dataset, run `./training/train.py`. For example, to finetune an ensemble of DINO, CLIP, and OpenCLIP using LoRA, run:
