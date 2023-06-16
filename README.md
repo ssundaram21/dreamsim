@@ -115,7 +115,7 @@ for i in range(n_iters):
 ```
 <!--Experiments-->
 ## NIGHTS (Novel Image Generations with Human-Tested Similarities) Dataset
-DreamSim is trained by fine-tuning on the NIGHTS dataset. For details on the dataset structure and creation, refer to the [dataset page](https://github.com/ssundaram21/dreamsim-dev/tree/main/dataset).
+DreamSim is trained by fine-tuning on the NIGHTS dataset. For details on the dataset structure and creation, refer to the [dataset page](https://github.com/ssundaram21/dreamsim/tree/main/dataset).
 
 Run `./dataset/download_dataset.sh` to download and unzip the NIGHTS dataset into `./dataset/nights`. The unzipped dataset size is 58 GB. 
 
