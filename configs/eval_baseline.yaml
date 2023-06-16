@@ -1,0 +1,8 @@
+seed: 1234
+baseline_model: dreamsim
+baseline_feat_type: cls,embedding,embedding
+baseline_stride: 16,16,16
+baseline_output_path: "outputs"
+nights_root: ./dataset/nights
+num_workers: 10
+batch_size: 16

@@ -1,0 +1,20 @@
+# platform: linux-64
+git+https://github.com/openai/CLIP.git
+configargparse
+dists-pytorch
+lpips
+numpy
+open-clip-torch
+pandas
+peft==0.1.0
+Pillow
+pytorch-lightning
+PyYAML
+scipy
+tensorboard
+timm
+torch
+torchmetrics
+torchvision
+tqdm
+transformers

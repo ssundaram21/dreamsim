@@ -1,0 +1,17 @@
+seed: 1234
+tag: mlp_single
+log_dir: ./output
+
+model_type: 'clip_vitb32'
+feat_type: 'embedding'
+stride: '32'
+hidden_size: 512
+
+dataset_root: ./dataset/nights
+num_workers: 16
+
+lr: 0.0003
+weight_decay: 0.0
+batch_size: 512
+epochs: 20
+margin: 0.05

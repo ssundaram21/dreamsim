@@ -1,0 +1,6 @@
+seed: 1234
+eval_root: "output/experiment_dir/lightning_logs/version_0"
+checkpoint_epoch: 7
+nights_root: ./dataset/nights
+num_workers: 10
+batch_size: 16
