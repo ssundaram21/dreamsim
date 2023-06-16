@@ -144,7 +144,7 @@ For an example of evaluating using a trained checkpoint, refer to `./configs/eva
 <!--Experiments-->
 
 <a name="bibtex"></a>
-# Citation
+## Citation
 
 If you find our work or any of our materials useful, please cite our paper:
 ```
