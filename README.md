@@ -1,7 +1,7 @@
 <!-- # ![icon](images/figs/icon.png)  DreamSim Perceptual Metric -->
 <!-- # DreamSim Perceptual Metric <img src="images/figs/icon.png" align="left" width="50px"/>  -->
 # DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data
-### [Project Page](https://dreamsim-nights.github.io/) | [Paper](https://google.com) | [Bibtex](https://google.com)
+### [Project Page](https://dreamsim-nights.github.io/) | [Paper](https://arxiv.org/abs/2306.09344) | [Bibtex](#bibtex)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1taEOMzFE9g81D9AwH27Uhy2U82tQGAVI?usp=sharing)
 
 [Stephanie Fu](https://stephanie-fu.github.io)\* $^{1}$, [Netanel Tamir](https://netanel-tamir.github.io)\* $^{2}$, [Shobhita Sundaram](https://ssundaram21.github.io)\* $^{1}$, [Lucy Chai](https://people.csail.mit.edu/lrchai/) $^1$, [Richard Zhang](http://richzhang.github.io) $^3$, [Tali Dekel](https://www.weizmann.ac.il/math/dekel/) $^2$, [Phillip Isola](https://web.mit.edu/phillipi/) $^1$. (*equal contribution)<br>
@@ -28,7 +28,8 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 
 The package is used for importing and using the DreamSim model.
 
-**Option 2:** Clone our repo and install dependencies:
+**Option 2:** Clone our repo and install dependencies.
+This is necessary for running our training/evaluation scripts.
 <!--  ```
 git clone https://github.com/ssundaram21/DreamSim.git
 conda env create -f environment.yml
@@ -38,9 +39,16 @@ export PYTHONPATH="$PYTHONPATH:$(realpath ./DreamSim)"
 python3 -m venv ds
 source ds/bin/activate
 pip install -r requirements.txt
-export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsim-dev)"
+export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsimv)"
 ```
-This is necessary for running our training/evaluation scripts.
+To install with conda:
+```
+conda create -n ds
+conda activate ds
+conda install pip # verify with the `which pip` command
+pip install -r requirements.txt
+export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsim)"
+```
 
 ## Usage
 **For walk-through examples of the below use-cases, check out our [Colab demo](https://colab.research.google.com/drive/1taEOMzFE9g81D9AwH27Uhy2U82tQGAVI?usp=sharing).**
@@ -134,17 +142,26 @@ python ./training/evaluate.py --config ./configs/eval_baseline.yaml
 
 For an example of evaluating using a trained checkpoint, refer to `./configs/eval_checkpoint.yaml`. See `./training/evaluate.py` for a full list and description of evaluation options.
 <!--Experiments-->
+
+<a name="bibtex"></a>
 # Citation
 
 If you find our work or any of our materials useful, please cite our paper:
 ```
- @article{fu2023learning,
-  title={Learning New Dimensions of Human Visual Similarity using Synthetic Data},
-  author={Stephanie Fu* and Netanel Tamir* and Shobhita Sundaram* and Lucy Chai and Richard Zhang and Tali Dekel and Phillip Isola},
-  journal={arXiv:ID},
-  year={2023}
+@misc{fu2023dreamsim,
+      title={DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data}, 
+      author={Stephanie Fu and Netanel Tamir and Shobhita Sundaram and Lucy Chai and Richard Zhang and Tali Dekel and Phillip Isola},
+      year={2023},
+      eprint={2306.09344},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 }
 ```
 
 ## Acknowledgements
+We thank Jim DiCarlo, Liad Mudrik, Nitzan Censor for fruitful discussions throughout the project. Additionally, we thank Narek Tumanyan for his insightful comments over the course of the project. Finally, we thank Michelle Li for proofreading sections of this paper and offering helpful comments. 
+
+This work was supported by the NSF GRFP Fellowship to Shobhita Sundaram, the Meta PhD Fellowship to Lucy Chai, the Israeli Science Foundation (grant 2303/20) to Tali Dekel, and the Packard Fellowship to Phillip Isola.
+
+Our code borrows from the ["Deep ViT Features as Dense Visual Descriptors"](https://dino-vit-features.github.io/) repository for ViT feature extraction, and takes inspiration from the [UniverSeg](https://github.com/JJGO/UniverSeg) respository for code structure.
 
