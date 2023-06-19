@@ -61,7 +61,7 @@ model, preprocess = dreamsim(pretrained=True)
 
 img1 = preprocess(Image.open("img1_path")).to("cuda")
 img2 = preprocess(Image.open("img2_path")).to("cuda")
-distance = model(img1, img2) # The model takes an RGB image from [0, 1], size 1x3x224x224
+distance = model(img1, img2) # The model takes an RGB image from [0, 1], size batch_sizex3x224x224
 ```
 
 To run on example images, run `demo.py`. The script should produce distances (0.424, 0.34). 
