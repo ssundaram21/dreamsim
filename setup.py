@@ -3,15 +3,15 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 long_description = "".join(long_description.split("<!--Experiments-->")[::2])
-long_description = "".join(long_description.split("![teaser](images/figs/teaser.png)")[::2])
+long_description = "".join(long_description.split("![teaser](images/figs/teaser.png)"))
 
 setuptools.setup(
     name="dreamsim",
-    version="0.1.0",
+    version="0.1.1",
     description="DreamSim similarity metric",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ssundaram21/dreamsim-dev",
+    url="https://github.com/ssundaram21/dreamsim",
     packages=['dreamsim', 'dreamsim/feature_extraction'],
     install_requires=[
         "numpy",
