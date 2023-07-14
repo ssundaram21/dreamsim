@@ -157,21 +157,22 @@ class MLP(torch.nn.Module):
         return self.fc2(x) + img
 
 
-def download_weights(cache_dir):
+def download_weights(cache_dir, dreamsim_type):
     """
     Downloads and unzips DreamSim weights.
     """
+
     dreamsim_required_ckpts = {
-        "dino_vitb16_pretrain.pth",
-        "open_clip_vitb16_pretrain.pth.tar",
-        "clip_vitb16_pretrain.pth.tar",
-        "dino_vitb16_lora",
-        "open_clip_vitb16_lora",
-        "clip_vitb16_lora"
+        "ensemble": ["dino_vitb16_pretrain.pth", "dino_vitb16_lora",
+                     "open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_lora",
+                     "clip_vitb32_pretrain.pth.tar", "clip_vitb32_lora"],
+        "dino_vitb16": ["dino_vitb16_pretrain.pth", "dino_vitb16_single_lora"],
+        "open_clip_vitb32": ["open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_single_lora"],
+        "clip_vitb32": ["clip_vitb32_pretrain.pth.tar", "clip_vitb32_single_lora"]
     }
 
     def check(path):
-        for required_ckpt in dreamsim_required_ckpts:
+        for required_ckpt in dreamsim_required_ckpts[dreamsim_type]:
             if not os.path.exists(os.path.join(path, required_ckpt)):
                 return False
         return True
@@ -183,39 +184,44 @@ def download_weights(cache_dir):
         print(f"Using cached {cache_dir}")
     else:
         print("Downloading checkpoint")
-        torch.hub.download_url_to_file(url=dreamsim_weights,
+        torch.hub.download_url_to_file(url=dreamsim_weights[dreamsim_type],
                                        dst=os.path.join(cache_dir, "pretrained.zip"))
         print("Unzipping...")
         with zipfile.ZipFile(os.path.join(cache_dir, "pretrained.zip"), 'r') as zip_ref:
             zip_ref.extractall(cache_dir)
 
 
-def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", normalize_embeds: bool = True):
-    """ Initialized the DreamSim model. When first called, downloads/caches model weights for future use.
+def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", normalize_embeds: bool = True,
+             dreamsim_type: str = "ensemble"):
+    """ Initializes the DreamSim model. When first called, downloads/caches model weights for future use.
 
     :param pretrained: If True, downloads and loads DreamSim weights.
     :param cache_dir: Location for downloaded weights.
     :param device: Device for model.
     :param normalize_embeds: If True, normalizes embeddings (i.e. divides by norm and subtracts mean).
+    :param dreamsim_type: The type of dreamsim model to use. The default is "ensemble" (default and best-performing)
+                          which concatenates dino_vitb16, clip_vitb16, and open_clip_vitb16 embeddings. Other options
+                          are "dino_vitb16", "clip_vitb32", and "open_clip_vitb32" which are finetuned single models.
     :return:
         - PerceptualModel with DreamSim settings and weights.
         - Preprocessing function that converts a PIL image and to a (1, 3, 224, 224) tensor with values [0-1].
     """
     # Get model settings and weights
-    download_weights(cache_dir=cache_dir)
+    download_weights(cache_dir=cache_dir, dreamsim_type=dreamsim_type)
 
     # initialize PerceptualModel and load weights
-    model_list = dreamsim_args['model_config']['model_type'].split(",")
-    ours_model = PerceptualModel(**dreamsim_args['model_config'], device=device, load_dir=cache_dir,
+    model_list = dreamsim_args['model_config'][dreamsim_type]['model_type'].split(",")
+    ours_model = PerceptualModel(**dreamsim_args['model_config'][dreamsim_type], device=device, load_dir=cache_dir,
                                  normalize_embeds=normalize_embeds)
     for extractor in ours_model.extractor_list:
         lora_config = LoraConfig(**dreamsim_args['lora_config'])
         model = get_peft_model(ViTModel(extractor.model, ViTConfig()), lora_config)
         extractor.model = model
 
+    tag = "" if dreamsim_type == "ensemble" else "single_"
     if pretrained:
         for extractor, name in zip(ours_model.extractor_list, model_list):
-            load_dir = os.path.join(cache_dir, f"{name}_lora")
+            load_dir = os.path.join(cache_dir, f"{name}_{tag}lora")
             extractor.model = PeftModel.from_pretrained(extractor.model, load_dir).to(device)
             extractor.model.eval().requires_grad_(False)
 
@@ -256,3 +262,4 @@ EMBED_DIMS = {
     'open_clip_vitb32': {'cls': 768, 'embedding': 512, 'last_layer': 768},
     'open_clip_vitl14': {'cls': 1024, 'embedding': 768, 'last_layer': 768}
 }
+
