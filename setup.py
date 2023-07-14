@@ -7,7 +7,7 @@ long_description = "".join(long_description.split("![teaser](images/figs/teaser.
 
 setuptools.setup(
     name="dreamsim",
-    version="0.1.1",
+    version="0.1.2",
     description="DreamSim similarity metric",
     long_description=long_description,
     long_description_content_type="text/markdown",
