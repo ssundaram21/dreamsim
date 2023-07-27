@@ -164,8 +164,8 @@ def download_weights(cache_dir, dreamsim_type):
 
     dreamsim_required_ckpts = {
         "ensemble": ["dino_vitb16_pretrain.pth", "dino_vitb16_lora",
-                     "open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_lora",
-                     "clip_vitb32_pretrain.pth.tar", "clip_vitb32_lora"],
+                     "open_clip_vitb16_pretrain.pth.tar", "open_clip_vitb16_lora",
+                     "clip_vitb16_pretrain.pth.tar", "clip_vitb16_lora"],
         "dino_vitb16": ["dino_vitb16_pretrain.pth", "dino_vitb16_single_lora"],
         "open_clip_vitb32": ["open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_single_lora"],
         "clip_vitb32": ["clip_vitb32_pretrain.pth.tar", "clip_vitb32_single_lora"]
