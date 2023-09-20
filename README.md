@@ -7,7 +7,7 @@
 [Stephanie Fu](https://stephanie-fu.github.io)\* $^{1}$, [Netanel Tamir](https://netanel-tamir.github.io)\* $^{2}$, [Shobhita Sundaram](https://ssundaram21.github.io)\* $^{1}$, [Lucy Chai](https://people.csail.mit.edu/lrchai/) $^1$, [Richard Zhang](http://richzhang.github.io) $^3$, [Tali Dekel](https://www.weizmann.ac.il/math/dekel/) $^2$, [Phillip Isola](https://web.mit.edu/phillipi/) $^1$. (*equal contribution)<br>
 $^1$ MIT, $^2$ Weizmann Institute of Science, $^3$ Adobe Research.
 
-![teaser](images/figs/teaser.png)
+![teaser](images/figs/teaser.jpg)
 
 **Summary**
 
