@@ -43,7 +43,6 @@ Here's how they compare to the full ensemble on NIGHTS (2AFC agreement):
 ## Requirements
 - Linux
 - Python 3
-- NVIDIA GPU + CUDA CuDNN (DreamSim is only supported on CUDA devices)
 
 ## Setup
 
