@@ -20,7 +20,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 * JND Dataset release
 * Distilled DreamSim models (i.e. smaller models distilled from the main ensemble)
 * DreamSim variants trained for higher resolutions
-* Compatibility with the most recent version of PeFT
+* Compatibility with the most recent version of PEFT
 
 ## 🚀 Updates
 
