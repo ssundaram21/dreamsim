@@ -1,15 +1,27 @@
+import json
+
 import torch
 import torch.nn.functional as F
+from torch import nn
 from torchvision import transforms
 import os
+
+from util.constants import *
 from .feature_extraction.extractor import ViTExtractor
 import yaml
+import peft
 from peft import PeftModel, LoraConfig, get_peft_model
-from .feature_extraction.vit_wrapper import ViTConfig, ViTModel
 from .config import dreamsim_args, dreamsim_weights
 import os
 import zipfile
+from packaging import version
 
+peft_version = version.parse(peft.__version__)
+min_version = version.parse('0.2.0')
+
+if peft_version < min_version:
+    raise RuntimeError(f"DreamSim requires peft version {min_version} or greater. "
+                       "Please update peft with 'pip install --upgrade peft'.")
 
 class PerceptualModel(torch.nn.Module):
     def __init__(self, model_type: str = "dino_vitb16", feat_type: str = "cls", stride: str = '16', hidden_size: int = 1,
@@ -41,7 +53,7 @@ class PerceptualModel(torch.nn.Module):
         self.stride_list = [int(x) for x in stride.split(',')]
         self._validate_args()
         self.extract_feats_list = []
-        self.extractor_list = []
+        self.extractor_list = nn.ModuleList()
         self.embed_size = 0
         self.hidden_size = hidden_size
         self.baseline = baseline
@@ -122,23 +134,23 @@ class PerceptualModel(torch.nn.Module):
 
     def _get_mean(self, model_type):
         if "dino" in model_type:
-            return (0.485, 0.456, 0.406)
+            return IMAGENET_DEFAULT_MEAN
         elif "open_clip" in model_type:
-            return (0.48145466, 0.4578275, 0.40821073)
+            return OPENAI_CLIP_MEAN
         elif "clip" in model_type:
-            return (0.48145466, 0.4578275, 0.40821073)
+            return OPENAI_CLIP_MEAN
         elif "mae" in model_type:
-            return (0.485, 0.456, 0.406)
+            return IMAGENET_DEFAULT_MEAN
 
     def _get_std(self, model_type):
         if "dino" in model_type:
-            return (0.229, 0.224, 0.225)
+            return IMAGENET_DEFAULT_STD
         elif "open_clip" in model_type:
-            return (0.26862954, 0.26130258, 0.27577711)
+            return OPENAI_CLIP_STD
         elif "clip" in model_type:
-            return (0.26862954, 0.26130258, 0.27577711)
+            return OPENAI_CLIP_STD
         elif "mae" in model_type:
-            return (0.229, 0.224, 0.225)
+            return IMAGENET_DEFAULT_STD
 
 
 class MLP(torch.nn.Module):
@@ -161,11 +173,9 @@ def download_weights(cache_dir, dreamsim_type):
     """
     Downloads and unzips DreamSim weights.
     """
-
     dreamsim_required_ckpts = {
-        "ensemble": ["dino_vitb16_pretrain.pth", "dino_vitb16_lora",
-                     "open_clip_vitb16_pretrain.pth.tar", "open_clip_vitb16_lora",
-                     "clip_vitb16_pretrain.pth.tar", "clip_vitb16_lora"],
+        "ensemble": ["dino_vitb16_pretrain.pth", "open_clip_vitb16_pretrain.pth.tar",
+                     "clip_vitb16_pretrain.pth.tar", "ensemble_lora"],
         "dino_vitb16": ["dino_vitb16_pretrain.pth", "dino_vitb16_single_lora"],
         "open_clip_vitb32": ["open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_single_lora"],
         "clip_vitb32": ["clip_vitb32_pretrain.pth.tar", "clip_vitb32_single_lora"]
@@ -213,17 +223,18 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
     model_list = dreamsim_args['model_config'][dreamsim_type]['model_type'].split(",")
     ours_model = PerceptualModel(**dreamsim_args['model_config'][dreamsim_type], device=device, load_dir=cache_dir,
                                  normalize_embeds=normalize_embeds)
-    for extractor in ours_model.extractor_list:
-        lora_config = LoraConfig(**dreamsim_args['lora_config'])
-        model = get_peft_model(ViTModel(extractor.model, ViTConfig()), lora_config)
-        extractor.model = model
 
-    tag = "" if dreamsim_type == "ensemble" else "single_"
+    tag = "ensemble_" if dreamsim_type == "ensemble" else f"{model_list[0]}_single_"
+
+    with open(os.path.join(cache_dir, f'{tag}lora', 'adapter_config.json'), 'r') as f:
+        adapter_config = json.load(f)
+    lora_keys = ['r', 'lora_alpha', 'lora_dropout', 'bias', 'target_modules']
+    lora_config = LoraConfig(**{k: adapter_config[k] for k in lora_keys})
+    ours_model = get_peft_model(ours_model, lora_config)
+
     if pretrained:
-        for extractor, name in zip(ours_model.extractor_list, model_list):
-            load_dir = os.path.join(cache_dir, f"{name}_{tag}lora")
-            extractor.model = PeftModel.from_pretrained(extractor.model, load_dir).to(device)
-            extractor.model.eval().requires_grad_(False)
+        load_dir = os.path.join(cache_dir, f"{tag}lora")
+        ours_model = PeftModel.from_pretrained(ours_model.base_model.model, load_dir).to(device)
 
     ours_model.eval().requires_grad_(False)
 
@@ -262,4 +273,3 @@ EMBED_DIMS = {
     'open_clip_vitb32': {'cls': 768, 'embedding': 512, 'last_layer': 768},
     'open_clip_vitl14': {'cls': 1024, 'embedding': 768, 'last_layer': 768}
 }
-

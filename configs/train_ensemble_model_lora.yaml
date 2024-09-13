@@ -17,5 +17,5 @@ epochs: 6
 margin: 0.05
 
 lora_r: 16
-lora_alpha: 0.5
+lora_alpha: 8
 lora_dropout: 0.3

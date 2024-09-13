@@ -94,7 +94,7 @@ img2 = preprocess(Image.open("img2_path")).to("cuda")
 distance = model(img1, img2) # The model takes an RGB image from [0, 1], size batch_sizex3x224x224
 ```
 
-To run on example images, run `demo.py`. The script should produce distances (0.424, 0.34). 
+To run on example images, run `demo.py`. The script should produce distances (0.4453, 0.2756). 
 
 ### (new!) Single-branch models
 By default, DreamSim uses an ensemble of CLIP, DINO, and OpenCLIP (all ViT-B/16). If you need a lighter-weight model you can use *single-branch* versions of DreamSim where only a single backbone is finetuned. The available options are OpenCLIP-ViTB/32, DINO-ViTB/16, CLIP-ViTB/32, in order of performance.  
