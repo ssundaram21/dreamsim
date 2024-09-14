@@ -3,7 +3,7 @@ mkdir -p ./models
 cd models
 
 ## UDPATE
-wget -O dreamsim_checkpoint.zip https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_checkpoint.zip
+wget -O dreamsim_checkpoint.zip https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_ensemble_checkpoint.zip
 wget -O clip_vitb32_pretrain.pth.tar https://github.com/ssundaram21/dreamsim/releases/download/v0.1.0/clip_vitb32_pretrain.pth.tar
 wget -O clipl14_as_dino_vitl.pth.tar https://github.com/ssundaram21/dreamsim/releases/download/v0.1.0/clip_vitl14_pretrain.pth.tar
 wget -O open_clip_vitb32_pretrain.pth.tar https://github.com/ssundaram21/dreamsim/releases/download/v0.1.0/open_clip_vitb32_pretrain.pth.tar
