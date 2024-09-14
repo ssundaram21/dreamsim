@@ -29,8 +29,8 @@ dreamsim_args = {
     }
 
 dreamsim_weights = {
-    "ensemble": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0/dreamsim_checkpoint.zip",
-    "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0/dreamsim_dino_vitb16_checkpoint.zip",
-    "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0/dreamsim_clip_vitb32_checkpoint.zip",
-    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0/dreamsim_open_clip_vitb32_checkpoint.zip"
+    "ensemble": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_checkpoint.zip",
+    "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_dino_vitb16_checkpoint.zip",
+    "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_clip_vitb32_checkpoint.zip",
+    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_open_clip_vitb32_checkpoint.zip"
 }
