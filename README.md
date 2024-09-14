@@ -23,7 +23,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 * DreamSim variants trained for higher resolutions
 
 ## 🚀 Newest Updates
-**9/13/24:** We released new versions of the ensemble and single-branch DreamSim models compatible with `peft>=0.2.0`. 
+**9/14/24:** We released new versions of the ensemble and single-branch DreamSim models compatible with `peft>=0.2.0`. 
 
 Here's how they perform on NIGHTS:
 |                   | NIGHTS - Val | NIGHTS - Test |
