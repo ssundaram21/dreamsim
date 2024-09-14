@@ -89,10 +89,11 @@ The following code snippet is all you need. The first time that you run `dreamsi
 from dreamsim import dreamsim
 from PIL import Image
 
-model, preprocess = dreamsim(pretrained=True)
+device = "cuda"
+model, preprocess = dreamsim(pretrained=True, device=device)
 
-img1 = preprocess(Image.open("img1_path")).to("cuda")
-img2 = preprocess(Image.open("img2_path")).to("cuda")
+img1 = preprocess(Image.open("img1_path")).to(device)
+img2 = preprocess(Image.open("img2_path")).to(device)
 distance = model(img1, img2) # The model takes an RGB image from [0, 1], size batch_sizex3x224x224
 ```
 
