@@ -7,7 +7,7 @@ long_description = "".join(long_description.split("![teaser](images/figs/teaser.
 
 setuptools.setup(
     name="dreamsim",
-    version="0.1.3",
+    version="0.2.0",
     description="DreamSim similarity metric",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -16,7 +16,7 @@ setuptools.setup(
     install_requires=[
         "numpy",
         "open-clip-torch",
-        "peft==0.1.0",
+        "peft",
         "Pillow",
         "torch",
         "timm",

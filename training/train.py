@@ -1,24 +1,18 @@
+import os
+import configargparse
 import logging
 import yaml
+import torch
 import pytorch_lightning as pl
+from torch.utils.data import DataLoader
+from peft import get_peft_model, LoraConfig, PeftModel
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from util.train_utils import Mean, HingeLoss, seed_worker
 from util.utils import get_preprocess
 from dataset.dataset import TwoAFCDataset
-from torch.utils.data import DataLoader
-import torch
-from peft import get_peft_model, LoraConfig, PeftModel
 from dreamsim import PerceptualModel
-from dreamsim.feature_extraction.vit_wrapper import ViTModel, ViTConfig
-import os
-import configargparse
-from tqdm import tqdm
-
-log = logging.getLogger("lightning.pytorch")
-log.propagate = False
-log.setLevel(logging.INFO)
 
 
 def parse_args():
@@ -30,6 +24,9 @@ def parse_args():
     parser.add_argument('--tag', type=str, default='', help='tag for experiments (ex. experiment name)')
     parser.add_argument('--log_dir', type=str, default="./logs", help='path to save model checkpoints and logs')
     parser.add_argument('--load_dir', type=str, default="./models", help='path to pretrained ViT checkpoints')
+    parser.add_argument('--save_mode', type=str, default="all", help='whether to save only LoRA adapter weights, '
+                                                                     'entire model, or both. Accepted '
+                                                                     'options: [adapter_only, entire_model, all]')
 
     ## Model options
     parser.add_argument('--model_type', type=str, default='dino_vitb16',
@@ -68,10 +65,11 @@ def parse_args():
 
 
 class LightningPerceptualModel(pl.LightningModule):
-    def __init__(self, feat_type: str = "cls", model_type: str = "dino_vitb16", stride: str = "16", hidden_size: int = 1,
+    def __init__(self, feat_type: str = "cls", model_type: str = "dino_vitb16", stride: str = "16",
+                 hidden_size: int = 1,
                  lr: float = 0.0003, use_lora: bool = False, margin: float = 0.05, lora_r: int = 16,
                  lora_alpha: float = 0.5, lora_dropout: float = 0.3, weight_decay: float = 0.0, train_data_len: int = 1,
-                 load_dir: str = "./models", device: str = "cuda",
+                 load_dir: str = "./models", device: str = "cuda", save_mode: str = "all",
                  **kwargs):
         super().__init__()
         self.save_hyperparameters()
@@ -88,18 +86,27 @@ class LightningPerceptualModel(pl.LightningModule):
         self.lora_alpha = lora_alpha
         self.lora_dropout = lora_dropout
         self.train_data_len = train_data_len
+        self.save_mode = save_mode
+
+        self.__validate_save_mode()
 
         self.started = False
         self.val_metrics = {'loss': Mean().to(device), 'score': Mean().to(device)}
         self.__reset_val_metrics()
 
-        self.perceptual_model = PerceptualModel(feat_type=self.feat_type, model_type=self.model_type, stride=self.stride,
+        self.perceptual_model = PerceptualModel(feat_type=self.feat_type, model_type=self.model_type,
+                                                stride=self.stride,
                                                 hidden_size=self.hidden_size, lora=self.use_lora, load_dir=load_dir,
                                                 device=device)
         if self.use_lora:
             self.__prep_lora_model()
         else:
             self.__prep_linear_model()
+
+        pytorch_total_params = sum(p.numel() for p in self.perceptual_model.parameters())
+        pytorch_total_trainable_params = sum(p.numel() for p in self.perceptual_model.parameters() if p.requires_grad)
+        print(f'Total params: {pytorch_total_params} | Trainable params: {pytorch_total_trainable_params} '
+              f'| % Trainable: {pytorch_total_trainable_params / pytorch_total_params * 100}')
 
         self.criterion = HingeLoss(margin=self.margin, device=device)
 
@@ -140,14 +147,11 @@ class LightningPerceptualModel(pl.LightningModule):
 
     def on_train_epoch_end(self):
         epoch = self.current_epoch + 1 if self.started else 0
-        self.logger.experiment.add_scalar(f'train_loss/', self.epoch_loss_train / self.trainer.num_training_batches, epoch)
+        self.logger.experiment.add_scalar(f'train_loss/', self.epoch_loss_train / self.trainer.num_training_batches,
+                                          epoch)
         self.logger.experiment.add_scalar(f'train_2afc_acc/', self.train_num_correct / self.train_data_len, epoch)
         if self.use_lora:
             self.__save_lora_weights()
-
-    def on_validation_start(self):
-        for extractor in self.perceptual_model.extractor_list:
-            extractor.model.eval()
 
     def on_validation_epoch_start(self):
         self.__reset_val_metrics()
@@ -159,7 +163,7 @@ class LightningPerceptualModel(pl.LightningModule):
 
         self.log(f'val_acc_ckpt', score, logger=False)
         self.log(f'val_loss_ckpt', loss, logger=False)
-        # log for tensorboard
+
         self.logger.experiment.add_scalar(f'val_2afc_acc/', score, epoch)
         self.logger.experiment.add_scalar(f'val_loss/', loss, epoch)
 
@@ -175,28 +179,31 @@ class LightningPerceptualModel(pl.LightningModule):
         optimizer = torch.optim.Adam(params, lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
         return [optimizer]
 
-    def load_lora_weights(self, checkpoint_root, epoch_load):
-        for extractor in self.perceptual_model.extractor_list:
-            load_dir = os.path.join(checkpoint_root,
-                                    f'epoch_{epoch_load}_{extractor.model_type}')
-            extractor.model = PeftModel.from_pretrained(extractor.model, load_dir).to(extractor.device)
+    def load_lora_weights(self, checkpoint_root, epoch_load=None):
+        if self.save_mode in {'adapter_only', 'all'}:
+            if epoch_load is not None:
+                checkpoint_root = os.path.join(checkpoint_root, f'epoch_{epoch_load}')
+
+            logging.info(f'Loading adapter weights from {checkpoint_root}')
+            self.perceptual_model = PeftModel.from_pretrained(self.perceptual_model.base_model.model, checkpoint_root).to(self.device)
+        else:
+            logging.info(f'Loading entire model from {checkpoint_root}')
+            sd = torch.load(os.path.join(checkpoint_root, f'epoch={epoch_load:02d}.ckpt'))['state_dict']
+            self.load_state_dict(sd, strict=True)
 
     def __reset_val_metrics(self):
         for k, v in self.val_metrics.items():
             v.reset()
 
     def __prep_lora_model(self):
-        for extractor in self.perceptual_model.extractor_list:
-            config = LoraConfig(
-                r=self.lora_r,
-                lora_alpha=self.lora_alpha,
-                lora_dropout=self.lora_dropout,
-                bias='none',
-                target_modules=['qkv']
-            )
-            extractor_model = get_peft_model(ViTModel(extractor.model, ViTConfig()),
-                                             config).to(extractor.device)
-            extractor.model = extractor_model
+        config = LoraConfig(
+            r=self.lora_r,
+            lora_alpha=self.lora_alpha,
+            lora_dropout=self.lora_dropout,
+            bias='none',
+            target_modules=['qkv']
+        )
+        self.perceptual_model = get_peft_model(self.perceptual_model, config)
 
     def __prep_linear_model(self):
         for extractor in self.perceptual_model.extractor_list:
@@ -206,17 +213,14 @@ class LightningPerceptualModel(pl.LightningModule):
             self.perceptual_model.mlp.requires_grad_(True)
 
     def __save_lora_weights(self):
-        for extractor in self.perceptual_model.extractor_list:
-            save_dir = os.path.join(self.trainer.callbacks[-1].dirpath,
-                                    f'epoch_{self.trainer.current_epoch}_{extractor.model_type}')
-            extractor.model.save_pretrained(save_dir)
-            adapters_weights = torch.load(os.path.join(save_dir, 'adapter_model.bin'))
-            new_adapters_weights = dict()
+        if self.save_mode != 'entire_model':
+            save_dir = os.path.join(self.trainer.callbacks[-1].dirpath, f'epoch_{self.trainer.current_epoch}')
+            self.perceptual_model.save_pretrained(save_dir)
 
-            for k, v in adapters_weights.items():
-                new_k = 'base_model.model.' + k
-                new_adapters_weights[new_k] = v
-            torch.save(new_adapters_weights, os.path.join(save_dir, 'adapter_model.bin'))
+    def __validate_save_mode(self):
+        save_options = {'adapter_only', 'entire_model', 'all'}
+        assert self.save_mode in save_options, f'save_mode must be one of {save_options}, got {self.save_mode}'
+        logging.info(f'Using save mode: {self.save_mode}')
 
 
 def run(args, device):
@@ -241,17 +245,18 @@ def run(args, device):
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
     logger = TensorBoardLogger(save_dir=exp_dir, default_hp_metric=False)
+    checkpointer = ModelCheckpoint(monitor='val_loss_ckpt',
+                                                save_top_k=-1,
+                                                save_last=True,
+                                                filename='{epoch:02d}',
+                                                mode='min') if args.save_mode != 'adapter_only' else None
     trainer = Trainer(devices=1,
                       accelerator='gpu',
                       log_every_n_steps=10,
                       logger=logger,
                       max_epochs=args.epochs,
                       default_root_dir=exp_dir,
-                      callbacks=ModelCheckpoint(monitor='val_loss_ckpt',
-                                                save_top_k=-1,
-                                                save_last=True,
-                                                filename='{epoch:02d}',
-                                                mode='max'),
+                      callbacks=checkpointer,
                       num_sanity_val_steps=0,
                       )
     checkpoint_root = os.path.join(exp_dir, 'lightning_logs', f'version_{trainer.logger.version}')
@@ -276,9 +281,3 @@ if __name__ == '__main__':
     args = parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     run(args, device)
-
-
-
-
-
-

@@ -1,9 +1,9 @@
 seed: 1234
 tag: lora_single
-log_dir: ./output
+log_dir: ./output/new_backbones
 
-model_type: 'mae_vitb16'
-feat_type: 'last_layer'
+model_type: 'dino_vitb16'
+feat_type: 'cls'
 stride: '16'
 use_lora: True
 
@@ -17,5 +17,5 @@ epochs: 8
 margin: 0.05
 
 lora_r: 16
-lora_alpha: 0.5
-lora_dropout: 0.3
+lora_alpha: 32
+lora_dropout: 0.2

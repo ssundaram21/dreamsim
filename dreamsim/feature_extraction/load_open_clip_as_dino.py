@@ -6,12 +6,12 @@ import os
 
 def load_open_clip_as_dino(patch_size, load_dir="./models", l14=False):
     if l14:
-        sd = torch.load(os.path.join(load_dir, 'open_clipl14_as_dino_vitl.pth.tar'), map_location='cpu')
+        sd = torch.load(os.path.join(load_dir, 'open_clipl14_as_dino_vitl.pth.tar'), map_location='cpu', weights_only=True)
         dino_vit = VisionTransformer(**sd['kwargs'])
         sd = sd['state_dict']
     else:
         dino_vit = vit_base(patch_size=patch_size)
-        sd = torch.load(os.path.join(load_dir, f'open_clip_vitb{patch_size}_pretrain.pth.tar'))['state_dict']
+        sd = torch.load(os.path.join(load_dir, f'open_clip_vitb{patch_size}_pretrain.pth.tar'), weights_only=True)['state_dict']
 
     dino_vit.pos_drop = torch.nn.LayerNorm(dino_vit.embed_dim)
     proj = sd.pop('proj')

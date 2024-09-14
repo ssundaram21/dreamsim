@@ -1,0 +1,17 @@
+tag: "clip"
+
+eval_checkpoint: "/path-to-ckpt/lightning_logs/version_0/checkpoints/epoch-to-eval/"
+eval_checkpoint_cfg: "/path-to-ckpt/lightning_logs/version_0/config.yaml"
+load_dir: "./models"
+
+baseline_model: "clip_vitb32"
+baseline_feat_type: "cls"
+baseline_stride: "32"
+
+nights_root: "./data/nights"
+bapps_root: "./data/2afc/val"
+things_root: "./data/things/things_src_images"
+things_file: "./data/things/things_valset.txt"
+
+batch_size: 256
+num_workers: 10

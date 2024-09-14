@@ -25,19 +25,12 @@ dreamsim_args = {
                 "lora": True
             }
         },
-        "lora_config": {
-            "r": 16,
-            "lora_alpha": 0.5,
-            "lora_dropout": 0.3,
-            "bias": "none",
-            "target_modules": ['qkv']
-        },
         "img_size": 224
     }
 
 dreamsim_weights = {
-    "ensemble": "https://github.com/ssundaram21/dreamsim/releases/download/v0.1.0/dreamsim_checkpoint.zip",
-    "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.1.2/dreamsim_dino_vitb16_checkpoint.zip",
-    "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.1.2/dreamsim_clip_vitb32_checkpoint.zip",
-    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.1.2/dreamsim_open_clip_vitb32_checkpoint.zip"
+    "ensemble": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_checkpoint.zip",
+    "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_dino_vitb16_checkpoint.zip",
+    "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_clip_vitb32_checkpoint.zip",
+    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_open_clip_vitb32_checkpoint.zip"
 }

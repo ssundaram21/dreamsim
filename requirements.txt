@@ -6,7 +6,7 @@ lpips
 numpy
 open-clip-torch
 pandas
-peft==0.1.0
+peft>=0.2.0
 Pillow
 pytorch-lightning
 PyYAML

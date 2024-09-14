@@ -18,8 +18,8 @@ class TwoAFCDataset(Dataset):
         self.load_size = load_size
         self.interpolation = interpolation
         self.preprocess_fn = get_preprocess_fn(preprocess, self.load_size, self.interpolation)
-
-        if self.split == "train" or self.split == "val":
+        
+        if self.split == "train" or self.split == "val" or self.split == "test":
             self.csv = self.csv[self.csv["split"] == split]
         elif split == 'test_imagenet':
             self.csv = self.csv[self.csv['split'] == 'test']

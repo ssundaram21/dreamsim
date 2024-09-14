@@ -1,6 +1,6 @@
 #!/bin/bash
-mkdir -p ./dataset
-cd dataset
+# mkdir -p ./dataset
+cd /home/fus/data/
 
 # Download NIGHTS dataset
 wget -O nights.zip https://data.csail.mit.edu/nights/nights.zip
