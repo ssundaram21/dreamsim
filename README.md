@@ -23,7 +23,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 * DreamSim variants trained for higher resolutions
 
 ## 🚀 Newest Updates
-**9/13/24:** Released new versions of the ensemble and single-branch DreamSim models compatible with `peft>=0.2.0`. 
+**9/13/24:** We released new versions of the ensemble and single-branch DreamSim models compatible with `peft>=0.2.0`. 
 
 Here's how they perform on NIGHTS:
 |                   | NIGHTS - Val | NIGHTS - Test |
@@ -33,6 +33,7 @@ Here's how they perform on NIGHTS:
 | `open_clip_vitb32`     |        95.6%      |   93.6%      |
 | `clip_vitb32`|         95.5%     |      95.3%      |
 
+We also released the entire [100k (unfiltered) NIGHTS dataset](#new-download-the-entire-100k-pre-filtered-nights-dataset) and the [JND (Just-Noticeable Difference) votes](#new-download-the-jnd-data).
 
 ## Table of Contents
 * [Requirements](#requirements)
