@@ -12,6 +12,12 @@ dreamsim_args = {
                 "stride": "16",
                 "lora": True
             },
+            "dinov2_vitb14": {
+                "feat_type": 'cls',
+                "model_type": "dinov2_vitb14",
+                "stride": "14",
+                "lora": True
+            },
             "clip_vitb32": {
                 "feat_type": 'embedding',
                 "model_type": "clip_vitb32",
@@ -23,7 +29,13 @@ dreamsim_args = {
                 "model_type": "open_clip_vitb32",
                 "stride": "32",
                 "lora": True
-            }
+            },
+            "synclr_vitb16": {
+                "feat_type": 'cls',
+                "model_type": "synclr_vitb16",
+                "stride": "16",
+                "lora": True
+            },
         },
         "img_size": 224
     }
@@ -32,5 +44,9 @@ dreamsim_weights = {
     "ensemble": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_ensemble_checkpoint.zip",
     "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_dino_vitb16_checkpoint.zip",
     "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_clip_vitb32_checkpoint.zip",
-    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_open_clip_vitb32_checkpoint.zip"
+    "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_open_clip_vitb32_checkpoint.zip",
+    "dinov2_vitb14": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dinov2_vitb14_checkpoint.zip",
+    "synclr_vitb16": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_synclr_vitb16_checkpoint.zip",
+    "dino_vitb16_patch": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dino_vitb16_patch_checkpoint.zip",
+    "dinov2_vitb14_patch": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dinov2_vitb14_patch_checkpoint.zip"
 }

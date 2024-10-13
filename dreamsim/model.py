@@ -6,7 +6,7 @@ from torch import nn
 from torchvision import transforms
 import os
 
-from .constants import *
+from util.constants import *
 from .feature_extraction.extractor import ViTExtractor
 import yaml
 import peft
@@ -38,6 +38,7 @@ class PerceptualModel(torch.nn.Module):
             'cls': The CLS token
             'embedding': The final layer tokens, extracted before the final projection head
             'last_layer':   The final layer tokens, extracted after the final projection head
+            'cls_patch': The CLS token and global-pooled patch tokens, concatenated
         :param stride: Stride of first convolution layer for each base model (should match patch size).
             Comma-separated list, same length as model_type.
         :param lora: True means finetuning with LoRA. Replaces the MLP with an identity function.
@@ -54,6 +55,7 @@ class PerceptualModel(torch.nn.Module):
         self._validate_args()
         self.extract_feats_list = []
         self.extractor_list = nn.ModuleList()
+        self.num_feats = []
         self.embed_size = 0
         self.hidden_size = hidden_size
         self.baseline = baseline
@@ -61,10 +63,10 @@ class PerceptualModel(torch.nn.Module):
             self.extractor_list.append(
                 ViTExtractor(model_type, stride, load_dir, device=device)
             )
-            self.extract_feats_list.append(
-                self._get_extract_fn(model_type, feat_type)
-            )
-            self.embed_size += EMBED_DIMS[model_type][feat_type]
+            extract_fn, num_feats = self._get_extract_fn(model_type, feat_type)
+            self.extract_feats_list.append(extract_fn)
+            self.num_feats.append(num_feats)
+            self.embed_size += EMBED_DIMS[model_type][feat_type.split('_')[0]]
         self.lora = lora
         if self.lora or self.baseline:
             self.mlp = torch.nn.Identity()
@@ -77,10 +79,25 @@ class PerceptualModel(torch.nn.Module):
         """
         :param img_a: An RGB image passed as a (1, 3, 224, 224) tensor with values [0-1].
         :param img_b: Same as img_a.
+        :param return_patch: If True, returns the distance for cat(CLS, patch)
         :return: A distance score for img_a and img_b. Higher means further/more different.
         """
         embed_a = self.embed(img_a)
         embed_b = self.embed(img_b)
+
+        if self.feat_type_list[0] == 'cls_patch':
+            cls_a = embed_a[:, 0]
+            patch_a = embed_a[:, 1:]
+            cls_b = embed_b[:, 0]
+            patch_b = embed_b[:, 1:]
+
+            n = patch_a.shape[0]
+            s = int(patch_a.shape[1] ** 0.5)
+            patch_a_pooled = F.adaptive_avg_pool2d(patch_a.reshape(n, s, s, -1).permute(0, 3, 1, 2), (1, 1)).squeeze()
+            patch_b_pooled = F.adaptive_avg_pool2d(patch_b.reshape(n, s, s, -1).permute(0, 3, 1, 2), (1, 1)).squeeze()
+
+            embed_a = torch.cat((cls_a, patch_a_pooled), dim=-1)
+            embed_b = torch.cat((cls_b, patch_b_pooled), dim=-1)
         return 1 - F.cosine_similarity(embed_a, embed_b, dim=-1)
 
     def embed(self, img):
@@ -104,12 +121,18 @@ class PerceptualModel(torch.nn.Module):
                 raise ValueError(f"{feat_type} not supported for {model_type}")
 
     def _get_extract_fn(self, model_type, feat_type):
+        num_feats = 1
         if feat_type == "cls":
             extract_fn = self._extract_cls
         elif feat_type == "embedding":
             extract_fn = self._extract_embedding
         elif feat_type == "last_layer":
             extract_fn = self._extract_last_layer
+        elif feat_type == "patch":
+            extract_fn = self._extract_patch
+        elif feat_type == "cls_patch":
+            extract_fn = self._extract_cls_and_patch
+            num_feats = 2
         else:
             raise ValueError(f"Feature type {feat_type} is not supported.")
 
@@ -117,11 +140,20 @@ class PerceptualModel(torch.nn.Module):
             prep_img = self._preprocess(img, model_type)
             return extract_fn(prep_img, extractor_index=extractor_index)
 
-        return extract
+        return extract, num_feats
+
+    def _extract_cls_and_patch(self, img, extractor_index=0):
+        layer = 11
+        out = self.extractor_list[extractor_index].extract_descriptors(img, layer)
+        return out
+
+    def _extract_patch(self, img, extractor_index=0):
+        layer = 11
+        return self._extract_cls_and_patch(img, extractor_index)[:, :, :, 1:, :]
 
     def _extract_cls(self, img, extractor_index=0):
         layer = 11
-        return self.extractor_list[extractor_index].extract_descriptors(img, layer)[:, :, :, 0, :]
+        return self._extract_cls_and_patch(img, extractor_index)[:, :, :, 0, :]
 
     def _extract_embedding(self, img, extractor_index=0):
         return self.extractor_list[extractor_index].forward(img, is_proj=True)
@@ -133,7 +165,7 @@ class PerceptualModel(torch.nn.Module):
         return transforms.Normalize(mean=self._get_mean(model_type), std=self._get_std(model_type))(img)
 
     def _get_mean(self, model_type):
-        if "dino" in model_type:
+        if "dino" in model_type or "synclr" in model_type:
             return IMAGENET_DEFAULT_MEAN
         elif "open_clip" in model_type:
             return OPENAI_CLIP_MEAN
@@ -143,7 +175,7 @@ class PerceptualModel(torch.nn.Module):
             return IMAGENET_DEFAULT_MEAN
 
     def _get_std(self, model_type):
-        if "dino" in model_type:
+        if "dino" in model_type or "synclr" in model_type:
             return IMAGENET_DEFAULT_STD
         elif "open_clip" in model_type:
             return OPENAI_CLIP_STD
@@ -177,8 +209,12 @@ def download_weights(cache_dir, dreamsim_type):
         "ensemble": ["dino_vitb16_pretrain.pth", "open_clip_vitb16_pretrain.pth.tar",
                      "clip_vitb16_pretrain.pth.tar", "ensemble_lora"],
         "dino_vitb16": ["dino_vitb16_pretrain.pth", "dino_vitb16_single_lora"],
+        "dinov2_vitb14": ["dinov2_vitb14_pretrain.pth", "dinov2_vitb14_single_lora"],
         "open_clip_vitb32": ["open_clip_vitb32_pretrain.pth.tar", "open_clip_vitb32_single_lora"],
-        "clip_vitb32": ["clip_vitb32_pretrain.pth.tar", "clip_vitb32_single_lora"]
+        "clip_vitb32": ["clip_vitb32_pretrain.pth.tar", "clip_vitb32_single_lora"],
+        "synclr_vitb16": ["synclr_vit_b_16.pth", "synclr_vitb16_single_lora"],
+        "dino_vitb16_patch": ["dino_vitb16_pretrain.pth", "dino_vitb16_patch_lora"],
+        "dinov2_vitb14_patch": ["dinov2_vitb14_pretrain.pth", "dinov2_vitb14_patch_lora"],
     }
 
     def check(path):
@@ -202,7 +238,7 @@ def download_weights(cache_dir, dreamsim_type):
 
 
 def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", normalize_embeds: bool = True,
-             dreamsim_type: str = "ensemble"):
+             dreamsim_type: str = "ensemble", use_patch_model=False):
     """ Initializes the DreamSim model. When first called, downloads/caches model weights for future use.
 
     :param pretrained: If True, downloads and loads DreamSim weights.
@@ -211,20 +247,30 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
     :param normalize_embeds: If True, normalizes embeddings (i.e. divides by norm and subtracts mean).
     :param dreamsim_type: The type of dreamsim model to use. The default is "ensemble" (default and best-performing)
                           which concatenates dino_vitb16, clip_vitb16, and open_clip_vitb16 embeddings. Other options
-                          are "dino_vitb16", "clip_vitb32", and "open_clip_vitb32" which are finetuned single models.
+                          are "dino_vitb16", "clip_vitb32", "open_clip_vitb32", "dinov2_vitb14", and "synclr_vitb16",
+                          which are finetuned single models.
+    :param use_patch_model: If True, returns the model trained with CLS and patch features, not just CLS.
     :return:
         - PerceptualModel with DreamSim settings and weights.
         - Preprocessing function that converts a PIL image and to a (1, 3, 224, 224) tensor with values [0-1].
     """
+    download_key = dreamsim_type
+    if use_patch_model:
+        download_key += '_patch'
     # Get model settings and weights
-    download_weights(cache_dir=cache_dir, dreamsim_type=dreamsim_type)
+    download_weights(cache_dir=cache_dir, dreamsim_type=download_key)
 
     # initialize PerceptualModel and load weights
     model_list = dreamsim_args['model_config'][dreamsim_type]['model_type'].split(",")
     ours_model = PerceptualModel(**dreamsim_args['model_config'][dreamsim_type], device=device, load_dir=cache_dir,
                                  normalize_embeds=normalize_embeds)
 
-    tag = "ensemble_" if dreamsim_type == "ensemble" else f"{model_list[0]}_single_"
+    if dreamsim_type == 'ensemble':
+        tag = 'ensemble_'
+    elif use_patch_model:
+        tag = f'{model_list[0]}_patch_'
+    else:
+        tag = f'{model_list[0]}_single_'
 
     with open(os.path.join(cache_dir, f'{tag}lora', 'adapter_config.json'), 'r') as f:
         adapter_config = json.load(f)
@@ -263,6 +309,7 @@ EMBED_DIMS = {
     'dino_vits16': {'cls': 384, 'last_layer': 384},
     'dino_vitb8': {'cls': 768, 'last_layer': 768},
     'dino_vitb16': {'cls': 768, 'last_layer': 768},
+    'dinov2_vitb14': {'cls': 768, 'last_layer': 768},
     'clip_vitb16': {'cls': 768, 'embedding': 512, 'last_layer': 768},
     'clip_vitb32': {'cls': 768, 'embedding': 512, 'last_layer': 512},
     'clip_vitl14': {'cls': 1024, 'embedding': 768, 'last_layer': 768},
@@ -271,5 +318,6 @@ EMBED_DIMS = {
     'mae_vith14': {'cls': 1280, 'last_layer': 1280},
     'open_clip_vitb16': {'cls': 768, 'embedding': 512, 'last_layer': 768},
     'open_clip_vitb32': {'cls': 768, 'embedding': 512, 'last_layer': 768},
-    'open_clip_vitl14': {'cls': 1024, 'embedding': 768, 'last_layer': 768}
+    'open_clip_vitl14': {'cls': 1024, 'embedding': 768, 'last_layer': 768},
+    'synclr_vitb16': {'cls': 768, 'last_layer': 768},
 }

@@ -7,6 +7,7 @@ from torch import nn
 import os
 from .load_clip_as_dino import load_clip_as_dino
 from .load_open_clip_as_dino import load_open_clip_as_dino
+from .load_synclr_as_dino import load_synclr_as_dino
 from .vision_transformer import DINOHead
 from .load_mae_as_vit import load_mae_as_vit
 
@@ -63,7 +64,10 @@ class ViTExtractor(nn.Module):
         :param load_dir: location of pretrained ViT checkpoints.
         :return: the model
         """
-        if 'dino' in model_type:
+        if 'dinov2' in model_type:
+            torch.hub.set_dir(load_dir)
+            model = torch.hub.load('facebookresearch/dinov2', model_type)
+        elif 'dino' in model_type:
             torch.hub.set_dir(load_dir)
             model = torch.hub.load('facebookresearch/dino:main', model_type)
             if model_type == 'dino_vitb16':
@@ -97,6 +101,11 @@ class ViTExtractor(nn.Module):
                 raise ValueError(f"Model {model_type} not supported")
         elif 'mae' in model_type:
             model = load_mae_as_vit(model_type, load_dir)
+        elif 'synclr' in model_type:
+            if model_type == 'synclr_vitb16':
+                model = load_synclr_as_dino(16, load_dir)
+            else:
+                raise ValueError(f"Model {model_type} not supported")
         else:
             raise ValueError(f"Model {model_type} not supported")
         return model

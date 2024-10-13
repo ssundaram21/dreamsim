@@ -1,18 +1,18 @@
-import os
-import configargparse
 import logging
 import yaml
-import torch
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader
-from peft import get_peft_model, LoraConfig, PeftModel
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from util.train_utils import Mean, HingeLoss, seed_worker
 from util.utils import get_preprocess
 from dataset.dataset import TwoAFCDataset
+from torch.utils.data import DataLoader
+import torch
+from peft import get_peft_model, LoraConfig, PeftModel
 from dreamsim import PerceptualModel
+import os
+import configargparse
 
 
 def parse_args():
@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument('--feat_type', type=str, default='cls',
                         help='What type of feature to extract from the model. If finetuning an ensemble, pass a '
                              'comma-separated list of features (same length as model_type). Accepted feature types: '
-                             '[cls, embedding, last_layer].')
+                             '[cls, embedding, last_layer, cls_patch].')
     parser.add_argument('--stride', type=str, default='16',
                         help='Stride of first convolution layer the model (should match patch size). If finetuning'
                              'an ensemble, pass a comma-separated list (same length as model_type).')
@@ -146,26 +146,27 @@ class LightningPerceptualModel(pl.LightningModule):
         self.started = True
 
     def on_train_epoch_end(self):
-        epoch = self.current_epoch + 1 if self.started else 0
-        self.logger.experiment.add_scalar(f'train_loss/', self.epoch_loss_train / self.trainer.num_training_batches,
-                                          epoch)
-        self.logger.experiment.add_scalar(f'train_2afc_acc/', self.train_num_correct / self.train_data_len, epoch)
+        self.logger.experiment.log({f'train_loss/': self.epoch_loss_train / self.trainer.num_training_batches})
+        self.logger.experiment.log({f'train_2afc_acc/': self.train_num_correct / self.train_data_len})
         if self.use_lora:
             self.__save_lora_weights()
+
+    def on_validation_start(self):
+        for extractor in self.perceptual_model.extractor_list:
+            extractor.model.eval()
 
     def on_validation_epoch_start(self):
         self.__reset_val_metrics()
 
     def on_validation_epoch_end(self):
-        epoch = self.current_epoch + 1 if self.started else 0
         score = self.val_metrics['score'].compute()
         loss = self.val_metrics['loss'].compute()
 
         self.log(f'val_acc_ckpt', score, logger=False)
         self.log(f'val_loss_ckpt', loss, logger=False)
 
-        self.logger.experiment.add_scalar(f'val_2afc_acc/', score, epoch)
-        self.logger.experiment.add_scalar(f'val_loss/', loss, epoch)
+        self.logger.experiment.log({f'val_2afc_acc/': score})
+        self.logger.experiment.log({f'val_loss/': loss})
 
         return score
 
@@ -244,7 +245,7 @@ def run(args, device):
                               worker_init_fn=seed_worker, generator=g)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
-    logger = TensorBoardLogger(save_dir=exp_dir, default_hp_metric=False)
+    logger = WandbLogger(save_dir=exp_dir, project='dreamsim_training')
     checkpointer = ModelCheckpoint(monitor='val_loss_ckpt',
                                                 save_top_k=-1,
                                                 save_last=True,
@@ -259,12 +260,11 @@ def run(args, device):
                       callbacks=checkpointer,
                       num_sanity_val_steps=0,
                       )
-    checkpoint_root = os.path.join(exp_dir, 'lightning_logs', f'version_{trainer.logger.version}')
-    os.makedirs(checkpoint_root, exist_ok=True)
-    with open(os.path.join(checkpoint_root, 'config.yaml'), 'w') as f:
+    os.makedirs(exp_dir, exist_ok=True)
+    with open(os.path.join(exp_dir, 'config.yaml'), 'w') as f:
         yaml.dump(args, f)
 
-    logging.basicConfig(filename=os.path.join(checkpoint_root, 'exp.log'), level=logging.INFO, force=True)
+    logging.basicConfig(filename=os.path.join(exp_dir, 'exp.log'), level=logging.INFO, force=True)
     logging.info("Arguments: ", vars(args))
 
     model = LightningPerceptualModel(device=device, train_data_len=len(train_dataset), **vars(args))
