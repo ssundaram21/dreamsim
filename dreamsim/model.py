@@ -309,12 +309,14 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
 
 
 def normalize_embedding(embed):
-    embed = (embed.T / torch.norm(embed, dim=1)).T
-    return (embed.T - torch.mean(embed, dim=1)).T
-
+    embed = (embed.T - torch.mean(embed, dim=1)).T
+    return (embed.T / torch.norm(embed, dim=1)).T
+    
 def normalize_embedding_patch(embed):
-    embed = (embed.mT / torch.norm(embed, dim=2)).mT
-    return (embed.mT - torch.mean(embed, dim=2)).mT
+    mean_matrix = torch.mean(embed, dim=2).unsqueeze(1)
+    embed = (embed.mT - mean_matrix).mT
+    normed_matrix = torch.norm(embed, dim=2).unsqueeze(1)
+    return (embed.mT / normed_matrix).mT
 
 EMBED_DIMS = {
     'dino_vits8': {'cls': 384, 'last_layer': 384},
