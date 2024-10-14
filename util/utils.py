@@ -1,4 +1,3 @@
-import torch
 from torchvision import transforms
 
 
@@ -35,8 +34,5 @@ def get_preprocess_fn(preprocess, load_size, interpolation):
         elif preprocess == "SSIM" or preprocess == "PSNR":
             t = transforms.ToTensor()
         else:
-            raise ValueError("Unknown preprocessing method")
+            raise ValueError(f"Unknown preprocessing method: {preprocess}")
         return lambda pil_img: t(pil_img.convert("RGB"))
-
-
-

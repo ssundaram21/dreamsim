@@ -1,0 +1,21 @@
+seed: 1234
+tag: lora_single_patch
+log_dir: ./output
+
+model_type: 'dino_vitb16'
+feat_type: 'cls_patch'
+stride: '16'
+use_lora: True
+
+dataset_root: ./dataset/nights
+num_workers: 4
+
+lr: 0.0003
+weight_decay: 0.0
+batch_size: 32
+epochs: 8
+margin: 0.05
+
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.2

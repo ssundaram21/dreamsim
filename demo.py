@@ -11,13 +11,13 @@ t = transforms.Compose([
 ])
 
 
-def preprocess(path):
-    pil_img = Image.open(path).convert('RGB')
-    return t(pil_img).unsqueeze(0)
+def preprocess(img):
+    img = img.convert('RGB')
+    return t(img).unsqueeze(0)
 
 # Load model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model, preprocess = dreamsim(pretrained=True, device=device)
+model, _ = dreamsim(pretrained=True, device=device)
 
 # Load images
 img_ref = preprocess(Image.open('images/ref_1.png')).to(device)
