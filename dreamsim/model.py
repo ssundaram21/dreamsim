@@ -129,6 +129,8 @@ class PerceptualModel(torch.nn.Module):
         assert len(self.model_list) == len(self.feat_type_list) == len(self.stride_list)
         
         for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list):
+            if feat_type == "cls_patch" and "dino" not in model_type:
+                raise ValueError(f"cls_patch only available for dino_vitb16 and dinov2_vitb14, not {model_type}")
             if feat_type == "embedding" and ("dino" in model_type or "mae" in model_type):
                 raise ValueError(f"{feat_type} not supported for {model_type}")
             if self.is_patch and feat_type != "cls_patch":
@@ -258,7 +260,7 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
                           which concatenates dino_vitb16, clip_vitb16, and open_clip_vitb16 embeddings. Other options
                           are "dino_vitb16", "clip_vitb32", "open_clip_vitb32", "dinov2_vitb14", and "synclr_vitb16",
                           which are finetuned single models.
-    :param use_patch_model: If True, returns the model trained with CLS and patch features, not just CLS.
+    :param use_patch_model: If True, returns the model trained with CLS and patch features, not just CLS (only available for dino_vitb16 and dinov2_vitb14)
     :return:
         - PerceptualModel with DreamSim settings and weights.
         - Preprocessing function that converts a PIL image and to a (1, 3, 224, 224) tensor with values [0-1].
