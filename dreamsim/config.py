@@ -18,6 +18,18 @@ dreamsim_args = {
                 "stride": "14",
                 "lora": True
             },
+             "dino_vitb16_patch": {
+                "feat_type": 'cls_patch',
+                "model_type": "dino_vitb16",
+                "stride": "16",
+                "lora": True
+            },
+            "dinov2_vitb14_patch": {
+                "feat_type": 'cls_patch',
+                "model_type": "dinov2_vitb14",
+                "stride": "14",
+                "lora": True
+            },
             "clip_vitb32": {
                 "feat_type": 'embedding',
                 "model_type": "clip_vitb32",

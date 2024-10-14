@@ -52,6 +52,7 @@ class PerceptualModel(torch.nn.Module):
         self.model_list = model_type.split(',')
         self.feat_type_list = feat_type.split(',')
         self.stride_list = [int(x) for x in stride.split(',')]
+        self.is_patch = "cls_patch" in self.feat_type_list
         self._validate_args()
         self.extract_feats_list = []
         self.extractor_list = nn.ModuleList()
@@ -79,7 +80,6 @@ class PerceptualModel(torch.nn.Module):
         """
         :param img_a: An RGB image passed as a (1, 3, 224, 224) tensor with values [0-1].
         :param img_b: Same as img_a.
-        :param return_patch: If True, returns the distance for cat(CLS, patch)
         :return: A distance score for img_a and img_b. Higher means further/more different.
         """
         embed_a = self.embed(img_a)
@@ -94,7 +94,11 @@ class PerceptualModel(torch.nn.Module):
             n = patch_a.shape[0]
             s = int(patch_a.shape[1] ** 0.5)
             patch_a_pooled = F.adaptive_avg_pool2d(patch_a.reshape(n, s, s, -1).permute(0, 3, 1, 2), (1, 1)).squeeze()
+            if len(patch_a_pooled.shape) == 1:
+                patch_a_pooled = patch_a_pooled.unsqueeze(0)
             patch_b_pooled = F.adaptive_avg_pool2d(patch_b.reshape(n, s, s, -1).permute(0, 3, 1, 2), (1, 1)).squeeze()
+            if len(patch_b_pooled.shape) == 1:
+                patch_b_pooled = patch_b_pooled.unsqueeze(0)
 
             embed_a = torch.cat((cls_a, patch_a_pooled), dim=-1)
             embed_b = torch.cat((cls_b, patch_b_pooled), dim=-1)
@@ -110,15 +114,26 @@ class PerceptualModel(torch.nn.Module):
             feats = (self.extract_feats_list[i](img, extractor_index=i)).squeeze()
             full_feats = torch.cat((full_feats, feats), dim=-1)
         embed = self.mlp(full_feats)
+        
+        if len(embed.shape) <= 1:
+            embed = embed.unsqueeze(0)
+        if len(embed.shape) <= 2 and self.is_patch:
+            embed = embed.unsqueeze(0)
+
         if self.normalize_embeds:
-            embed = normalize_embedding(embed)
+            embed = normalize_embedding_patch(embed) if self.is_patch else normalize_embedding(embed)
+            
         return embed
 
     def _validate_args(self):
         assert len(self.model_list) == len(self.feat_type_list) == len(self.stride_list)
+        
         for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list):
             if feat_type == "embedding" and ("dino" in model_type or "mae" in model_type):
                 raise ValueError(f"{feat_type} not supported for {model_type}")
+            if self.is_patch and feat_type != "cls_patch":
+                # If cls_patch is specified for one model, it has to be specified for all.
+                raise ValueError(f"Cannot extract {feat_type} for {model_type}; cls_patch specified elsewhere.")
 
     def _get_extract_fn(self, model_type, feat_type):
         num_feats = 1
@@ -128,8 +143,6 @@ class PerceptualModel(torch.nn.Module):
             extract_fn = self._extract_embedding
         elif feat_type == "last_layer":
             extract_fn = self._extract_last_layer
-        elif feat_type == "patch":
-            extract_fn = self._extract_patch
         elif feat_type == "cls_patch":
             extract_fn = self._extract_cls_and_patch
             num_feats = 2
@@ -146,10 +159,6 @@ class PerceptualModel(torch.nn.Module):
         layer = 11
         out = self.extractor_list[extractor_index].extract_descriptors(img, layer)
         return out
-
-    def _extract_patch(self, img, extractor_index=0):
-        layer = 11
-        return self._extract_cls_and_patch(img, extractor_index)[:, :, :, 1:, :]
 
     def _extract_cls(self, img, extractor_index=0):
         layer = 11
@@ -254,11 +263,10 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
         - PerceptualModel with DreamSim settings and weights.
         - Preprocessing function that converts a PIL image and to a (1, 3, 224, 224) tensor with values [0-1].
     """
-    download_key = dreamsim_type
     if use_patch_model:
-        download_key += '_patch'
+        dreamsim_type += '_patch'
     # Get model settings and weights
-    download_weights(cache_dir=cache_dir, dreamsim_type=download_key)
+    download_weights(cache_dir=cache_dir, dreamsim_type=dreamsim_type)
 
     # initialize PerceptualModel and load weights
     model_list = dreamsim_args['model_config'][dreamsim_type]['model_type'].split(",")
@@ -299,10 +307,12 @@ def dreamsim(pretrained: bool = True, device="cuda", cache_dir="./models", norma
 
 
 def normalize_embedding(embed):
-    if len(embed.shape) <= 1:
-        embed = embed.unsqueeze(0)
     embed = (embed.T / torch.norm(embed, dim=1)).T
     return (embed.T - torch.mean(embed, dim=1)).T
+
+def normalize_embedding_patch(embed):
+    embed = (embed.mT / torch.norm(embed, dim=2)).mT
+    return (embed.mT - torch.mean(embed, dim=2)).mT
 
 EMBED_DIMS = {
     'dino_vits8': {'cls': 384, 'last_layer': 384},
