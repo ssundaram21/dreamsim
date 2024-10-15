@@ -19,14 +19,14 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 ## 🚀 Newest Updates
 **10/14/24:** We released 4 new variants of DreamSim! These new checkpoints are:
 - DINOv2 B/14 and SynCLR B/16 as backbones
-- Models trained with the original contrastive loss on both CLS and dense features. 
+- DINOv2 B/14 and DINO B/16 trained with the original contrastive loss on both CLS and dense features. 
 
 These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, When Does Perceptual Alignment Benefit Vision Representations?**
 
 We find that our perceptually-aligned representations outperform the baseline models on a variety of standard computer vision tasks, including semantic segmentation, depth estimation, object counting, instance retrieval, and retrieval-augmented generation. These results point towards perceptual alignment as a useful objective for learning general-purpose vision representations. See the paper and our [blog post](https://percep-align.github.io) 
 for more details.
 
-Here's how they perform on NIGHTS:
+Here's the updated NIGHTS performance table:
 |                   | NIGHTS - Val | NIGHTS - Test |
 |-------------------|--------------|---------------|
 | `ensemble`        |       96.9%       |     96.2%     |
