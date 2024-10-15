@@ -19,7 +19,8 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 ## 🚀 Newest Updates
 **10/14/24:** We released 4 new variants of DreamSim! These new checkpoints are:
 - DINOv2 B/14 and SynCLR B/16 as backbones
-- DINOv2 B/14 and DINO B/16 trained with the original contrastive loss on both CLS and dense features. 
+- DINOv2 B/14 and DINO B/16 trained with the original contrastive loss on both CLS and dense features.
+  - To extract features from the model variant trained through both the CLS and patch features, set `use_patch_model=True` when calling `dreamsim()`.
 
 These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, [When Does Perceptual Alignment Benefit Vision Representations?](https://arxiv.org/abs/2410.10817)**
 
@@ -91,7 +92,7 @@ export PYTHONPATH="$PYTHONPATH:$(realpath ./dreamsim)"
 ### Quickstart: Perceptual similarity metric
 The basic use case is to measure the perceptual distance between two images. **A higher score means more different, lower means more similar**. 
 
-The following code snippet is all you need. The first time that you run `dreamsim` it will automatically download the model weights. The default model settings are specified in `./dreamsim/config.py`.
+The following code snippet is all you need. The first time that you run `dreamsim` it will automatically download the model weights. The default model settings are specified in `./dreamsim/config.py`. **To extract features from the model variant trained through both the CLS and patch features, set `use_patch_model=True` when calling `dreamsim()`.**
 ```
 from dreamsim import dreamsim
 from PIL import Image
