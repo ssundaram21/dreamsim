@@ -21,7 +21,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 - DINOv2 B/14 and SynCLR B/16 as backbones
 - Models trained with the original contrastive loss on both CLS and dense features. 
 
-These models (and the originals) are further evaluated in our new NeurIPS 2024 paper, When Does Perceptual Alignment Benefit Vision Representations?
+These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, When Does Perceptual Alignment Benefit Vision Representations?**
 
 We find that our perceptually-aligned models outperform the baseline models on a variety of standard computer vision tasks, including 
 semantic segmentation, depth estimation, object counting, instance retrieval, and retrieval-augmented generation. These results 
