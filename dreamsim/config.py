@@ -57,8 +57,8 @@ dreamsim_weights = {
     "dino_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_dino_vitb16_checkpoint.zip",
     "clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_clip_vitb32_checkpoint.zip",
     "open_clip_vitb32": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.0-checkpoints/dreamsim_open_clip_vitb32_checkpoint.zip",
-    "dinov2_vitb14": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dinov2_vitb14_checkpoint.zip",
-    "synclr_vitb16": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_synclr_vitb16_checkpoint.zip",
-    "dino_vitb16_patch": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dino_vitb16_patch_checkpoint.zip",
-    "dinov2_vitb14_patch": "http://static.berkeleyvision.org/fus/dreamsim_zips/dreamsim_dinov2_vitb14_patch_checkpoint.zip"
+    "dinov2_vitb14": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.1-checkpoints/dreamsim_dinov2_vitb14_checkpoint.zip",
+    "synclr_vitb16": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.1-checkpoints/dreamsim_synclr_vitb16_checkpoint.zip",
+    "dino_vitb16_patch": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.1-checkpoints/dreamsim_dino_vitb16_patch_checkpoint.zip",
+    "dinov2_vitb14_patch": "https://github.com/ssundaram21/dreamsim/releases/download/v0.2.1-checkpoints/dreamsim_dinov2_vitb14_patch_checkpoint.zip"
 }
