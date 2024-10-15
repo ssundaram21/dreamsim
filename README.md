@@ -23,9 +23,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 
 These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, When Does Perceptual Alignment Benefit Vision Representations?**
 
-We find that our perceptually-aligned models outperform the baseline models on a variety of standard computer vision tasks, including 
-semantic segmentation, depth estimation, object counting, instance retrieval, and retrieval-augmented generation. These results 
-point towards perceptual alignment being a useful task for learning general-purpose vision representations. See the paper and our [blog post](https://percep-align.github.io) 
+We find that our perceptually-aligned representations outperform the baseline models on a variety of standard computer vision tasks, including semantic segmentation, depth estimation, object counting, instance retrieval, and retrieval-augmented generation. These results point towards perceptual alignment as a useful objective for learning general-purpose vision representations. See the paper and our [blog post](https://percep-align.github.io) 
 for more details.
 
 Here's how they perform on NIGHTS:
