@@ -6,7 +6,7 @@ from torch import nn
 from torchvision import transforms
 import os
 
-from util.constants import *
+from .constants import *
 from .feature_extraction.extractor import ViTExtractor
 import yaml
 import peft
