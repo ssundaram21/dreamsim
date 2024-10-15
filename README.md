@@ -21,7 +21,7 @@ DreamSim is a new metric for perceptual image similarity that bridges the gap be
 - DINOv2 B/14 and SynCLR B/16 as backbones
 - DINOv2 B/14 and DINO B/16 trained with the original contrastive loss on both CLS and dense features. 
 
-These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, When Does Perceptual Alignment Benefit Vision Representations?**
+These models (and the originals) are further evaluated in **our new NeurIPS 2024 paper, [When Does Perceptual Alignment Benefit Vision Representations?](https://arxiv.org/abs/2410.10817)**
 
 We find that our perceptually-aligned representations outperform the baseline models on a variety of standard computer vision tasks, including semantic segmentation, depth estimation, object counting, instance retrieval, and retrieval-augmented generation. These results point towards perceptual alignment as a useful objective for learning general-purpose vision representations. See the paper and our [blog post](https://percep-align.github.io) 
 for more details.
@@ -201,7 +201,7 @@ For an example of evaluating using a trained checkpoint, refer to `./configs/eva
 <a name="bibtex"></a>
 ## Citation
 
-If you find our work or any of our materials useful, please cite our paper:
+If you find our work or any of our materials useful, please cite our papers:
 ```
 @misc{fu2023dreamsim,
       title={DreamSim: Learning New Dimensions of Human Visual Similarity using Synthetic Data}, 
@@ -210,6 +210,17 @@ If you find our work or any of our materials useful, please cite our paper:
       eprint={2306.09344},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
+}
+```
+```
+@misc{sundaram2024doesperceptualalignmentbenefit,
+      title={When Does Perceptual Alignment Benefit Vision Representations?}, 
+      author={Shobhita Sundaram and Stephanie Fu and Lukas Muttenthaler and Netanel Y. Tamir and Lucy Chai and Simon Kornblith and Trevor Darrell and Phillip Isola},
+      year={2024},
+      eprint={2410.10817},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2410.10817}, 
 }
 ```
 
