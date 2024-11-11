@@ -190,13 +190,13 @@ python ./training/train.py --config ./configs/train_ensemble_model_lora.yaml
 We provide more sample configs in `./configs`, including examples of finetuning with LoRA and with an MLP head. See `./training/train.py` for a full list and description of training options.
 
 ### Evaluation
-To evaluate a perceptual model on the dataset, run `./training/evaluate.py`. For example, to evaluate dreamsim on the dataset, run:
+To evaluate a perceptual model on the dataset, run `./evaluation/eval_percep.py`. For example, to evaluate a trained checkpoint against a baseline model on the dataset, run:
 
 ```
-python ./training/evaluate.py --config ./configs/eval_baseline.yaml
+python ./evaluation/eval_percep.py --config ./configs/eval_ensemble.yaml
 ```
 
-For an example of evaluating using a trained checkpoint, refer to `./configs/eval_checkpoint.yaml`. See `./training/evaluate.py` for a full list and description of evaluation options.
+See `./evaluate/eval_percep.py` for a full list and description of evaluation options.
 <!--Experiments-->
 
 <a name="bibtex"></a>
