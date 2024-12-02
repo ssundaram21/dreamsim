@@ -52,7 +52,7 @@ def load_dreamsim_model(args, device="cuda"):
     with open(os.path.join(args.eval_checkpoint_cfg), "r") as f:
         cfg = yaml.load(f, Loader=yaml.Loader)
 
-    model_cfg = vars(cfg)
+    model_cfg = cfg
     model_cfg['load_dir'] = args.load_dir
     model = LightningPerceptualModel(**model_cfg)
     model.load_lora_weights(args.eval_checkpoint)
