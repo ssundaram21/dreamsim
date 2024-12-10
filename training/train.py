@@ -184,7 +184,13 @@ class LightningPerceptualModel(pl.LightningModule):
         if self.save_mode in {'adapter_only', 'all'}:
             if epoch_load is not None:
                 checkpoint_root = os.path.join(checkpoint_root, f'epoch_{epoch_load}')
-
+                
+            with open(os.path.join(checkpoint_root, 'adapter_config.json'), 'r') as f:
+                adapter_config = json.load(f)
+            lora_keys = ['r', 'lora_alpha', 'lora_dropout', 'bias', 'target_modules']
+            lora_config = LoraConfig(**{k: adapter_config[k] for k in lora_keys})
+            self.perceptual_model = get_peft_model(self.perceptual_model, lora_config)
+            
             logging.info(f'Loading adapter weights from {checkpoint_root}')
             self.perceptual_model = PeftModel.from_pretrained(self.perceptual_model.base_model.model, checkpoint_root).to(self.device)
         else:
