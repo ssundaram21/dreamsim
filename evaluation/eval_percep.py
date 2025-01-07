@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument('--nights_root', type=str, default=None, help='path to nights dataset.')
     parser.add_argument('--bapps_root', type=str, default=None, help='path to bapps images.')
     parser.add_argument('--things_root', type=str, default=None, help='path to things images.')
-    parser.add_argument('--things_file', type=str, default=None, help='path to things info file.')
+    parser.add_argument('--things_file', type=str, default=None, help='path to things info file (https://osf.io/b2a4j)')
     parser.add_argument('--df2_root', type=str, default=None, help='path to df2 root.')
     parser.add_argument('--df2_gt', type=str, default=None, help='path to df2 ground truth json.')
     parser.add_argument('--num_workers', type=int, default=16)
