@@ -235,7 +235,7 @@ def download_weights(cache_dir, dreamsim_type):
         return True
 
     if not os.path.exists(cache_dir):
-        os.mkdir(cache_dir)
+        os.makedirs(cache_dir)
 
     if check(cache_dir):
         print(f"Using cached {cache_dir}")
