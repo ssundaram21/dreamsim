@@ -32,7 +32,7 @@ class PerceptualModel(torch.nn.Module):
 
         :param model_type: Comma-separated list of base ViT models. Accepted values are:
             ['dino_vits8', 'dino_vits16', 'dino_vitb8', 'dino_vitb16', 'clip_vitb16', 'clip_vitb32', 'clip_vitl14',
-            'mae_vitb16', 'mae_vitl16', 'mae_vith14', 'open_clip_vitb16', 'open_clip_vitb32', 'open_clip_vitl14']
+            'mae_vitb16', 'mae_vitl16', 'mae_vith14', 'open_clip_vitb16', 'open_clip_vitb32', 'open_clip_vitl14', 'synclr_vitb16']
         :param feat_type: Which ViT feature to extract for each base model.
             Comma-separated list, same length as model_type. Accepted values are:
             'cls': The CLS token
