@@ -7,6 +7,8 @@ mkdir -p distort
 
 # Download NIGHTS dataset
 
+wget http://data.csail.mit.edu/nights/nights_unfiltered/nights_raw.csv
+
 # store those in a list and loop through wget and unzip and rm
 for i in {0..99..25}
 do
